@@ -39,3 +39,10 @@ Vanilla JS · Vite · CodeMirror 6 · `@replit/codemirror-vim`
 ## License
 
 MIT (what would you even copy :tear)
+
+### tbd
+
+- local storage
+- shareable link
+- buffers
+- add the existing commands cheatsheet

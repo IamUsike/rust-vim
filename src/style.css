@@ -224,6 +224,16 @@ body {
   color: var(--fg-muted);
 }
 
+#editor .cm-lineNumbers .cm-gutterElement {
+  min-width: 2.4em;
+  text-align: right;
+}
+
+#editor .cm-relLine-current {
+  color: var(--fg-accent);
+  font-weight: 500;
+}
+
 #editor .cm-activeLineGutter {
   background: var(--bg-elevated);
 }

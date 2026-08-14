@@ -1,6 +1,6 @@
 import './style.css';
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
-import { EditorState } from '@codemirror/state';
+import { EditorView, keymap, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
+import { Compartment, EditorState } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { rust } from '@codemirror/lang-rust';
 import { bracketMatching } from '@codemirror/language';
@@ -8,6 +8,7 @@ import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { vim, Vim, getCM } from '@replit/codemirror-vim';
 import { rainbowBrackets } from './rainbowBrackets.js';
+import { relativeLineNumbers } from './relativeLineNumbers.js';
 
 // ---- Default code ----
 const DEFAULT_CODE = `fn main() {
@@ -29,6 +30,23 @@ function saveCode(code) {
     localStorage.setItem('rust-vim-playground-code', code);
   } catch (_) {}
 }
+
+const WRAP_STORAGE_KEY = 'rust-vim-playground-wrap';
+
+function getInitialWrap() {
+  try {
+    return localStorage.getItem(WRAP_STORAGE_KEY) === '1';
+  } catch (_) {}
+  return false;
+}
+
+function saveWrap(enabled) {
+  try {
+    localStorage.setItem(WRAP_STORAGE_KEY, enabled ? '1' : '0');
+  } catch (_) {}
+}
+
+const wrapCompartment = new Compartment();
 
 // ---- DOM refs ----
 const editorEl = document.getElementById('editor');
@@ -284,7 +302,8 @@ const view = new EditorView({
     extensions: [
       vim(),
       runKeymap,
-      lineNumbers(),
+      relativeLineNumbers,
+      wrapCompartment.of(getInitialWrap() ? EditorView.lineWrapping : []),
       highlightActiveLine(),
       highlightActiveLineGutter(),
       history(),
@@ -336,6 +355,20 @@ try {
   Vim.defineEx('help', 'help', () => {
     toggleCheatsheet();
   });
+
+  // Space is "move right" by default; unmap it so <Space>uw can be a leader sequence.
+  Vim.unmap('<Space>');
+  Vim.map('<Space>', 'l', 'visual');
+  Vim.map('<Space>', 'l', 'operatorPending');
+  Vim.defineAction('toggleWrap', (cm) => {
+    const v = cm.cm6;
+    const next = !v.lineWrapping;
+    v.dispatch({
+      effects: wrapCompartment.reconfigure(next ? EditorView.lineWrapping : []),
+    });
+    saveWrap(next);
+  });
+  Vim.mapCommand('<Space>uw', 'action', 'toggleWrap', {}, { context: 'normal' });
 } catch (e) {
   console.warn('Could not define Vim ex commands:', e);
 }

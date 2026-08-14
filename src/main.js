@@ -3,6 +3,8 @@ import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLi
 import { EditorState } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { rust } from '@codemirror/lang-rust';
+import { bracketMatching } from '@codemirror/language';
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { vim, Vim, getCM } from '@replit/codemirror-vim';
 
@@ -56,6 +58,78 @@ function closeCheatsheet() {
 
 // ---- Running state ----
 let isRunning = false;
+let isFormatting = false;
+
+// ---- Format code via Playground API ----
+async function formatCode({ silent = false } = {}) {
+  if (isFormatting) return false;
+  isFormatting = true;
+
+  if (!silent) {
+    outputEl.innerHTML = '<span class="spinner"></span><span class="output-loading">Formatting...</span>';
+    outputSection.classList.remove('collapsed');
+  }
+
+  const code = view.state.doc.toString();
+
+  try {
+    const resp = await fetch('https://play.rust-lang.org/format', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channel: channelSelect.value,
+        edition: editionSelect.value,
+        code,
+      }),
+    });
+
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+
+    const data = await resp.json();
+
+    if (data.success && data.code && data.code !== code) {
+      // Replace editor contents, preserving undo history
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: data.code },
+      });
+      saveCode(data.code);
+      if (!silent) {
+        outputEl.innerHTML = '<span class="output-success">✓ Formatted</span>';
+      }
+    } else if (data.success) {
+      if (!silent) {
+        outputEl.innerHTML = '<span class="output-success">✓ Already formatted</span>';
+      }
+    } else {
+      if (!silent) {
+        outputEl.innerHTML = '';
+        const errSpan = document.createElement('span');
+        errSpan.className = 'output-warning';
+        errSpan.textContent = data.stderr || 'Format failed';
+        outputEl.appendChild(errSpan);
+      }
+      return false;
+    }
+    return true;
+  } catch (err) {
+    if (!silent) {
+      outputEl.innerHTML = '';
+      const errSpan = document.createElement('span');
+      errSpan.className = 'output-error';
+      errSpan.textContent = `⚠ Format error: ${err.message}`;
+      outputEl.appendChild(errSpan);
+    }
+    return false;
+  } finally {
+    isFormatting = false;
+  }
+}
+
+// ---- Format then run ----
+async function formatAndRun() {
+  await formatCode({ silent: true });
+  await runCode();
+}
 
 // ---- Run code ----
 async function runCode() {
@@ -213,13 +287,27 @@ const view = new EditorView({
       highlightActiveLine(),
       highlightActiveLineGutter(),
       history(),
-      keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+      closeBrackets(),
+      bracketMatching(),
+      keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
       rust(),
       oneDark,
       updateListener,
       EditorView.theme({
         '&': { height: '100%' },
         '.cm-scroller': { overflow: 'auto' },
+        '.cm-matchingBracket': {
+          color: '#d19a66 !important',
+          backgroundColor: 'rgba(209, 154, 102, 0.15)',
+          fontWeight: '700',
+          outline: '1px solid rgba(209, 154, 102, 0.4)',
+          borderRadius: '2px',
+        },
+        '.cm-nonmatchingBracket': {
+          color: '#e06c75 !important',
+          backgroundColor: 'rgba(224, 108, 117, 0.15)',
+          fontWeight: '700',
+        },
       }),
     ],
   }),
@@ -230,13 +318,19 @@ const view = new EditorView({
 // Define a custom Vim ex-command :w that runs the code
 try {
   Vim.defineEx('w', 'w', () => {
-    runCode();
+    formatAndRun();
   });
   Vim.defineEx('write', 'w', () => {
-    runCode();
+    formatAndRun();
   });
   Vim.defineEx('run', 'run', () => {
     runCode();
+  });
+  Vim.defineEx('fmt', 'fmt', () => {
+    formatCode();
+  });
+  Vim.defineEx('format', 'fmt', () => {
+    formatCode();
   });
   Vim.defineEx('help', 'help', () => {
     toggleCheatsheet();

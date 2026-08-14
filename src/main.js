@@ -1,14 +1,28 @@
 import './style.css';
 import { EditorView, keymap, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
-import { Compartment, EditorState } from '@codemirror/state';
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { Compartment, EditorState, Prec } from '@codemirror/state';
+import { defaultKeymap, history, historyKeymap, indentWithTab, moveLineUp, moveLineDown, copyLineUp, copyLineDown, deleteLine, toggleComment, addCursorAbove, addCursorBelow } from '@codemirror/commands';
 import { rust } from '@codemirror/lang-rust';
 import { bracketMatching } from '@codemirror/language';
-import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import {
+  closeBrackets,
+  closeBracketsKeymap,
+  autocompletion,
+  completionKeymap,
+  completionStatus,
+  completeAnyWord,
+  startCompletion,
+  acceptCompletion,
+  closeCompletion,
+  moveCompletionSelection,
+  nextSnippetField,
+  prevSnippetField,
+} from '@codemirror/autocomplete';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { vim, Vim, getCM } from '@replit/codemirror-vim';
 import { rainbowBrackets } from './rainbowBrackets.js';
 import { relativeLineNumbers } from './relativeLineNumbers.js';
+import { rustCompletions } from './rustCompletions.js';
 
 // ---- Default code ----
 const DEFAULT_CODE = `fn main() {
@@ -255,6 +269,14 @@ function updateVimMode(cm) {
 
   vimModeEl.textContent = label;
   vimModeEl.className = `mode-${displayMode.toLowerCase()}`;
+
+  if (displayMode !== 'insert' && displayMode !== 'replace') {
+    try {
+      if (completionStatus(view.state)) {
+        queueMicrotask(() => closeCompletion(view));
+      }
+    } catch (_) {}
+  }
 }
 
 // ---- Cursor position ----
@@ -266,6 +288,34 @@ function updateCursorPos(state) {
 }
 
 // ---- Build editor ----
+const completionKeys = Prec.high(keymap.of([
+  {
+    key: 'Tab',
+    run: (v) => {
+      if (completionStatus(v.state) === 'active') return acceptCompletion(v);
+      return nextSnippetField(v);
+    },
+  },
+  { key: 'Shift-Tab', run: prevSnippetField },
+  {
+    key: 'Ctrl-n',
+    run: (v) => (
+      completionStatus(v.state) === 'active'
+        ? moveCompletionSelection(true)(v)
+        : startCompletion(v)
+    ),
+  },
+  {
+    key: 'Ctrl-p',
+    run: (v) => (
+      completionStatus(v.state) === 'active'
+        ? moveCompletionSelection(false)(v)
+        : startCompletion(v)
+    ),
+  },
+  ...completionKeymap,
+]));
+
 const runKeymap = keymap.of([
   {
     key: 'Ctrl-Enter',
@@ -275,6 +325,23 @@ const runKeymap = keymap.of([
     },
   },
 ]);
+
+const lineOpsKeymap = Prec.high(keymap.of([
+  { key: 'Alt-j', run: moveLineDown },
+  { key: 'Alt-k', run: moveLineUp },
+  { key: 'Alt-ArrowDown', run: moveLineDown },
+  { key: 'Alt-ArrowUp', run: moveLineUp },
+  { key: 'Shift-Alt-j', run: copyLineDown },
+  { key: 'Shift-Alt-k', run: copyLineUp },
+  { key: 'Shift-Alt-ArrowDown', run: copyLineDown },
+  { key: 'Shift-Alt-ArrowUp', run: copyLineUp },
+  { key: 'Mod-Alt-j', run: addCursorBelow },
+  { key: 'Mod-Alt-k', run: addCursorAbove },
+  { key: 'Mod-Alt-ArrowDown', run: addCursorBelow },
+  { key: 'Mod-Alt-ArrowUp', run: addCursorAbove },
+  { key: 'Shift-Mod-k', run: deleteLine },
+  { key: 'Mod-/', run: toggleComment },
+]));
 
 const updateListener = EditorView.updateListener.of((update) => {
   if (update.selectionSet || update.docChanged) {
@@ -302,12 +369,19 @@ const view = new EditorView({
     extensions: [
       vim(),
       runKeymap,
+      lineOpsKeymap,
       relativeLineNumbers,
       wrapCompartment.of(getInitialWrap() ? EditorView.lineWrapping : []),
       highlightActiveLine(),
       highlightActiveLineGutter(),
       history(),
       closeBrackets(),
+      autocompletion({
+        override: [rustCompletions, completeAnyWord],
+        activateOnTyping: true,
+        icons: true,
+      }),
+      completionKeys,
       bracketMatching(),
       rainbowBrackets,
       keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),

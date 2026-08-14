@@ -285,6 +285,39 @@ body {
 #editor .rb-bracket-5,
 #editor .rb-bracket-5 span { color: #c678dd !important; }
 
+/* Autocomplete tooltip */
+#editor .cm-tooltip {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 4px;
+  color: var(--fg-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+#editor .cm-tooltip-autocomplete > ul {
+  font-family: var(--font-mono) !important;
+  max-height: 14em;
+}
+
+#editor .cm-tooltip-autocomplete ul li[aria-selected] {
+  background: var(--bg-input) !important;
+  color: var(--fg-primary) !important;
+}
+
+#editor .cm-completionMatchedText {
+  color: var(--fg-accent) !important;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+#editor .cm-completionDetail {
+  color: var(--fg-muted);
+  font-style: normal;
+  margin-left: 0.6em;
+}
+
 /* ---- Output Section ---- */
 #output-section {
   flex-shrink: 0;

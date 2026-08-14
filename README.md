@@ -1,6 +1,6 @@
 # 🦀 rustvim
 
-A minimal browser-based Rust editor with **real vim keybindings**.  
+A minimal browser-based Rust editor with vim keybindings.  
 Compiles and runs code via the public [Rust Playground API](https://play.rust-lang.org) — no backend required.
 
 ## Features

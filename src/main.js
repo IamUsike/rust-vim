@@ -1,0 +1,254 @@
+import './style.css';
+import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view';
+import { EditorState } from '@codemirror/state';
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { rust } from '@codemirror/lang-rust';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { vim, Vim, getCM } from '@replit/codemirror-vim';
+
+// ---- Default code ----
+const DEFAULT_CODE = `fn main() {
+    println!("Hello, world!");
+}
+`;
+
+// ---- Restore from localStorage or use default ----
+function getInitialCode() {
+  try {
+    const saved = localStorage.getItem('rust-vim-playground-code');
+    if (saved && saved.trim().length > 0) return saved;
+  } catch (_) {}
+  return DEFAULT_CODE;
+}
+
+function saveCode(code) {
+  try {
+    localStorage.setItem('rust-vim-playground-code', code);
+  } catch (_) {}
+}
+
+// ---- DOM refs ----
+const editorEl = document.getElementById('editor');
+const outputEl = document.getElementById('output');
+const runBtn = document.getElementById('run-btn');
+const clearBtn = document.getElementById('clear-btn');
+const toggleOutputBtn = document.getElementById('toggle-output-btn');
+const outputSection = document.getElementById('output-section');
+const vimModeEl = document.getElementById('vim-mode');
+const cursorPosEl = document.getElementById('cursor-pos');
+const channelSelect = document.getElementById('channel-select');
+const modeSelect = document.getElementById('mode-select');
+const editionSelect = document.getElementById('edition-select');
+
+// ---- Running state ----
+let isRunning = false;
+
+// ---- Run code ----
+async function runCode() {
+  if (isRunning) return;
+  isRunning = true;
+  runBtn.classList.add('running');
+
+  // Show loading state
+  outputEl.innerHTML = '<span class="spinner"></span><span class="output-loading">Compiling and running...</span>';
+
+  // Ensure output is visible
+  outputSection.classList.remove('collapsed');
+
+  const code = view.state.doc.toString();
+  saveCode(code);
+
+  const payload = {
+    channel: channelSelect.value,
+    mode: modeSelect.value,
+    edition: editionSelect.value,
+    crateType: 'bin',
+    tests: false,
+    backtrace: false,
+    code,
+  };
+
+  try {
+    const resp = await fetch('https://play.rust-lang.org/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!resp.ok) {
+      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+    }
+
+    const data = await resp.json();
+    renderOutput(data);
+  } catch (err) {
+    outputEl.innerHTML = '';
+    const errSpan = document.createElement('span');
+    errSpan.className = 'output-error';
+    errSpan.textContent = `⚠ Network error: ${err.message}\n\nThis may be a CORS issue. The Rust Playground API may not allow requests from this origin.\nTry running this app from localhost or the deployed GitHub Pages URL.`;
+    outputEl.appendChild(errSpan);
+  } finally {
+    isRunning = false;
+    runBtn.classList.remove('running');
+  }
+}
+
+function renderOutput(data) {
+  outputEl.innerHTML = '';
+
+  const { success, stdout, stderr } = data;
+
+  if (stderr && stderr.trim()) {
+    const stderrEl = document.createElement('span');
+    // Distinguish warnings from errors
+    const hasError = /^error/m.test(stderr);
+    stderrEl.className = hasError ? 'output-stderr' : 'output-warning';
+    stderrEl.textContent = stderr;
+    outputEl.appendChild(stderrEl);
+  }
+
+  if (stdout && stdout.trim()) {
+    if (stderr && stderr.trim()) {
+      outputEl.appendChild(document.createTextNode('\n'));
+    }
+    const stdoutEl = document.createElement('span');
+    stdoutEl.className = 'output-stdout';
+    stdoutEl.textContent = stdout;
+    outputEl.appendChild(stdoutEl);
+  }
+
+  if ((!stdout || !stdout.trim()) && (!stderr || !stderr.trim())) {
+    const emptyEl = document.createElement('span');
+    emptyEl.className = 'output-placeholder';
+    emptyEl.textContent = success
+      ? '(program produced no output)'
+      : '(compilation failed with no output)';
+    outputEl.appendChild(emptyEl);
+  }
+
+  // Add exit status indicator
+  if (success !== undefined) {
+    const statusEl = document.createElement('span');
+    statusEl.className = success ? 'output-success' : 'output-error';
+    statusEl.textContent = success ? '\n\n✓ exit code: 0' : '\n\n✗ non-zero exit code';
+    outputEl.appendChild(statusEl);
+  }
+}
+
+// ---- Vim mode display ----
+function updateVimMode(cm) {
+  if (!cm) return;
+  const mode = cm.state.vim?.mode || 'normal';
+  const subMode = cm.state.vim?.visualMode ? 'visual' :
+                  cm.state.vim?.insertMode ? 'insert' :
+                  cm.state.vim?.replaceMode ? 'replace' : null;
+
+  const displayMode = subMode || mode;
+  const label = displayMode.toUpperCase();
+
+  vimModeEl.textContent = label;
+  vimModeEl.className = `mode-${displayMode.toLowerCase()}`;
+}
+
+// ---- Cursor position ----
+function updateCursorPos(state) {
+  const pos = state.selection.main.head;
+  const line = state.doc.lineAt(pos);
+  const col = pos - line.from;
+  cursorPosEl.textContent = `Ln ${line.number}, Col ${col + 1}`;
+}
+
+// ---- Build editor ----
+const runKeymap = keymap.of([
+  {
+    key: 'Ctrl-Enter',
+    run: () => {
+      runCode();
+      return true;
+    },
+  },
+]);
+
+const updateListener = EditorView.updateListener.of((update) => {
+  if (update.selectionSet || update.docChanged) {
+    updateCursorPos(update.state);
+  }
+
+  // Update vim mode on every update
+  try {
+    const cm = getCM(view);
+    if (cm) updateVimMode(cm);
+  } catch (_) {}
+
+  // Debounced save
+  if (update.docChanged) {
+    clearTimeout(updateListener._saveTimer);
+    updateListener._saveTimer = setTimeout(() => {
+      saveCode(update.state.doc.toString());
+    }, 1000);
+  }
+});
+
+const view = new EditorView({
+  state: EditorState.create({
+    doc: getInitialCode(),
+    extensions: [
+      vim(),
+      runKeymap,
+      lineNumbers(),
+      highlightActiveLine(),
+      highlightActiveLineGutter(),
+      history(),
+      keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+      rust(),
+      oneDark,
+      updateListener,
+      EditorView.theme({
+        '&': { height: '100%' },
+        '.cm-scroller': { overflow: 'auto' },
+      }),
+    ],
+  }),
+  parent: editorEl,
+});
+
+// ---- Wire :w to run code ----
+// Define a custom Vim ex-command :w that runs the code
+try {
+  Vim.defineEx('w', 'w', () => {
+    runCode();
+  });
+  Vim.defineEx('write', 'w', () => {
+    runCode();
+  });
+  Vim.defineEx('run', 'run', () => {
+    runCode();
+  });
+} catch (e) {
+  console.warn('Could not define Vim ex commands:', e);
+}
+
+// ---- Event listeners ----
+runBtn.addEventListener('click', runCode);
+
+clearBtn.addEventListener('click', () => {
+  outputEl.innerHTML = '<span class="output-placeholder">Output cleared.</span>';
+});
+
+toggleOutputBtn.addEventListener('click', () => {
+  outputSection.classList.toggle('collapsed');
+});
+
+// ---- Vim mode polling (fallback for mode changes) ----
+setInterval(() => {
+  try {
+    const cm = getCM(view);
+    if (cm) updateVimMode(cm);
+  } catch (_) {}
+}, 200);
+
+// ---- Initial state ----
+updateCursorPos(view.state);
+
+// Focus editor on load
+view.focus();

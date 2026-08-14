@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rust Vim Playground</title>
+  <meta name="description" content="A minimal browser-based Rust code editor with vim keybindings. Compile and run Rust code via the Rust Playground API." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🦀%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div id="app">
+    <header id="toolbar">
+      <div class="toolbar-left">
+        <span class="logo">🦀 rust<span class="logo-accent">vim</span></span>
+      </div>
+      <div class="toolbar-controls">
+        <div class="control-group">
+          <label for="channel-select">channel</label>
+          <select id="channel-select">
+            <option value="stable" selected>stable</option>
+            <option value="beta">beta</option>
+            <option value="nightly">nightly</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="mode-select">mode</label>
+          <select id="mode-select">
+            <option value="debug" selected>debug</option>
+            <option value="release">release</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="edition-select">edition</label>
+          <select id="edition-select">
+            <option value="2015">2015</option>
+            <option value="2018">2018</option>
+            <option value="2021" selected>2021</option>
+            <option value="2024">2024</option>
+          </select>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button id="run-btn" type="button">
+          <span class="run-icon">▶</span>
+          <span>Run</span>
+          <kbd>Ctrl+Enter</kbd>
+        </button>
+      </div>
+    </header>
+
+    <main id="editor-container">
+      <div id="editor"></div>
+    </main>
+
+    <div id="output-section">
+      <div id="output-header">
+        <span class="output-title">output</span>
+        <div class="output-actions">
+          <button id="clear-btn" type="button" title="Clear output">clear</button>
+          <button id="toggle-output-btn" type="button" title="Toggle output pane">▼</button>
+        </div>
+      </div>
+      <pre id="output"><span class="output-placeholder">Press Ctrl+Enter or :w to run your code.</span></pre>
+    </div>
+
+    <footer id="status-bar">
+      <span id="vim-mode">NORMAL</span>
+      <span id="cursor-pos"></span>
+    </footer>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

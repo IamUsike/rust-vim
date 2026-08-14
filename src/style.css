@@ -1,0 +1,467 @@
+/* ========================================
+   Rust Vim Playground — Core Styles
+   Terminal-adjacent dark theme
+   ======================================== */
+
+:root {
+  /* Base palette */
+  --bg-root: #0d0f12;
+  --bg-surface: #13161b;
+  --bg-elevated: #1a1e25;
+  --bg-input: #10131a;
+  --border: #2a2f3a;
+  --border-focus: #4a5568;
+
+  /* Text */
+  --fg-primary: #c9d1d9;
+  --fg-secondary: #8b949e;
+  --fg-muted: #555d68;
+  --fg-accent: #d19a66;
+
+  /* Semantic */
+  --color-success: #98c379;
+  --color-error: #e06c75;
+  --color-warning: #e5c07b;
+  --color-info: #61afef;
+  --color-run: #98c379;
+  --color-run-hover: #7fb865;
+
+  /* Spacing */
+  --toolbar-h: 44px;
+  --status-h: 26px;
+  --gap: 1px;
+
+  /* Font */
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, 'Cascadia Code',
+    'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+}
+
+/* ---- Reset ---- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-root);
+  color: var(--fg-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- App Shell ---- */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ---- Toolbar ---- */
+#toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--toolbar-h);
+  padding: 0 12px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.logo {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--fg-primary);
+  user-select: none;
+}
+
+.logo-accent {
+  color: var(--fg-accent);
+}
+
+.toolbar-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.control-group label {
+  font-size: 11px;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.control-group select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg-input);
+  color: var(--fg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 3px 24px 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+  /* custom dropdown arrow */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238b949e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
+}
+
+.control-group select:hover {
+  border-color: var(--border-focus);
+}
+
+.control-group select:focus {
+  border-color: var(--color-info);
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+}
+
+#run-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--color-run);
+  border: 1px solid var(--color-run);
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+#run-btn:hover {
+  background: rgba(152, 195, 121, 0.1);
+}
+
+#run-btn:active {
+  background: rgba(152, 195, 121, 0.2);
+}
+
+#run-btn.running {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+#run-btn .run-icon {
+  font-size: 10px;
+}
+
+#run-btn kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--fg-muted);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 4px;
+}
+
+/* ---- Editor Container ---- */
+#editor-container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-root);
+}
+
+#editor {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* CodeMirror overrides for seamless integration */
+#editor .cm-editor {
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  background: var(--bg-root);
+}
+
+#editor .cm-editor.cm-focused {
+  outline: none;
+}
+
+#editor .cm-scroller {
+  overflow: auto;
+  font-family: var(--font-mono) !important;
+}
+
+#editor .cm-gutters {
+  background: var(--bg-root);
+  border-right: 1px solid var(--border);
+  color: var(--fg-muted);
+}
+
+#editor .cm-activeLineGutter {
+  background: var(--bg-elevated);
+}
+
+#editor .cm-activeLine {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Vim cursor styles */
+#editor .cm-vim-panel {
+  background: var(--bg-surface) !important;
+  color: var(--fg-secondary) !important;
+  border-top: 1px solid var(--border) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+  padding: 2px 8px !important;
+}
+
+#editor .cm-vim-panel input {
+  background: transparent !important;
+  color: var(--fg-primary) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 13px !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* fat cursor in normal mode */
+#editor .cm-fat-cursor .cm-cursor {
+  background: rgba(209, 154, 102, 0.7) !important;
+  border: none !important;
+}
+
+#editor .cm-cursor {
+  border-left-color: var(--fg-accent) !important;
+}
+
+/* ---- Output Section ---- */
+#output-section {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 40vh;
+  min-height: 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg-surface);
+  transition: max-height 0.2s ease;
+}
+
+#output-section.collapsed {
+  max-height: 30px;
+}
+
+#output-section.collapsed #output {
+  display: none;
+}
+
+#output-section.collapsed #toggle-output-btn {
+  transform: rotate(180deg);
+}
+
+#output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 30px;
+  padding: 0 12px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.output-title {
+  font-size: 11px;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.output-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.output-actions button {
+  background: none;
+  border: none;
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: color 0.15s;
+}
+
+.output-actions button:hover {
+  color: var(--fg-secondary);
+}
+
+#toggle-output-btn {
+  transition: transform 0.2s ease, color 0.15s;
+}
+
+#output {
+  flex: 1;
+  overflow: auto;
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fg-primary);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  min-height: 60px;
+  max-height: calc(40vh - 30px);
+}
+
+.output-placeholder {
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+.output-stdout {
+  color: var(--fg-primary);
+}
+
+.output-stderr {
+  color: var(--color-error);
+}
+
+.output-warning {
+  color: var(--color-warning);
+}
+
+.output-error {
+  color: var(--color-error);
+  font-weight: 500;
+}
+
+.output-success {
+  color: var(--color-success);
+}
+
+.output-loading {
+  color: var(--fg-muted);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--fg-muted);
+  border-top-color: var(--fg-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* ---- Status Bar ---- */
+#status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--status-h);
+  padding: 0 12px;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+#vim-mode {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 1px 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+#vim-mode.mode-normal {
+  color: var(--bg-root);
+  background: var(--color-info);
+}
+
+#vim-mode.mode-insert {
+  color: var(--bg-root);
+  background: var(--color-success);
+}
+
+#vim-mode.mode-visual {
+  color: var(--bg-root);
+  background: var(--color-warning);
+}
+
+#vim-mode.mode-replace {
+  color: var(--bg-root);
+  background: var(--color-error);
+}
+
+#cursor-pos {
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}

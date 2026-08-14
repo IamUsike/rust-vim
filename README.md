@@ -38,4 +38,4 @@ Vanilla JS · Vite · CodeMirror 6 · `@replit/codemirror-vim`
 
 ## License
 
-MIT
+MIT (what would you even copy :tear)

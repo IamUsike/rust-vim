@@ -261,6 +261,20 @@ body {
   border-left-color: var(--fg-accent) !important;
 }
 
+/* Rainbow brackets: matching pairs share a color by nesting depth */
+#editor .rb-bracket-0,
+#editor .rb-bracket-0 span { color: #e06c75 !important; }
+#editor .rb-bracket-1,
+#editor .rb-bracket-1 span { color: #d19a66 !important; }
+#editor .rb-bracket-2,
+#editor .rb-bracket-2 span { color: #e5c07b !important; }
+#editor .rb-bracket-3,
+#editor .rb-bracket-3 span { color: #98c379 !important; }
+#editor .rb-bracket-4,
+#editor .rb-bracket-4 span { color: #61afef !important; }
+#editor .rb-bracket-5,
+#editor .rb-bracket-5 span { color: #c678dd !important; }
+
 /* ---- Output Section ---- */
 #output-section {
   flex-shrink: 0;

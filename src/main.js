@@ -7,6 +7,7 @@ import { bracketMatching } from '@codemirror/language';
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { vim, Vim, getCM } from '@replit/codemirror-vim';
+import { rainbowBrackets } from './rainbowBrackets.js';
 
 // ---- Default code ----
 const DEFAULT_CODE = `fn main() {
@@ -289,6 +290,7 @@ const view = new EditorView({
       history(),
       closeBrackets(),
       bracketMatching(),
+      rainbowBrackets,
       keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
       rust(),
       oneDark,
@@ -297,7 +299,6 @@ const view = new EditorView({
         '&': { height: '100%' },
         '.cm-scroller': { overflow: 'auto' },
         '.cm-matchingBracket': {
-          color: '#d19a66 !important',
           backgroundColor: 'rgba(209, 154, 102, 0.15)',
           fontWeight: '700',
           outline: '1px solid rgba(209, 154, 102, 0.4)',

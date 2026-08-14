@@ -43,6 +43,7 @@
         </div>
       </div>
       <div class="toolbar-right">
+        <button id="help-btn" type="button" title="Cheatsheet (:help)">?</button>
         <button id="run-btn" type="button">
           <span class="run-icon">▶</span>
           <span>Run</span>
@@ -70,6 +71,79 @@
       <span id="vim-mode">NORMAL</span>
       <span id="cursor-pos"></span>
     </footer>
+
+    <!-- Cheatsheet overlay -->
+    <div id="cheatsheet-overlay" class="cheatsheet-hidden">
+      <div id="cheatsheet-backdrop"></div>
+      <div id="cheatsheet">
+        <div class="cheatsheet-header">
+          <span class="cheatsheet-title">cheatsheet</span>
+          <button id="cheatsheet-close" type="button" title="Close (Esc)">✕</button>
+        </div>
+        <div class="cheatsheet-body">
+          <div class="cheatsheet-col">
+            <h3>Playground</h3>
+            <dl>
+              <dt><kbd>Ctrl+Enter</kbd></dt><dd>Run code</dd>
+              <dt><kbd>:w</kbd></dt><dd>Run code (write)</dd>
+              <dt><kbd>:run</kbd></dt><dd>Run code</dd>
+              <dt><kbd>:help</kbd></dt><dd>Toggle cheatsheet</dd>
+            </dl>
+            <h3>Modes</h3>
+            <dl>
+              <dt><kbd>i</kbd></dt><dd>Insert mode</dd>
+              <dt><kbd>v</kbd></dt><dd>Visual mode</dd>
+              <dt><kbd>V</kbd></dt><dd>Visual line mode</dd>
+              <dt><kbd>Ctrl+v</kbd></dt><dd>Visual block mode</dd>
+              <dt><kbd>R</kbd></dt><dd>Replace mode</dd>
+              <dt><kbd>Esc</kbd></dt><dd>Normal mode</dd>
+            </dl>
+          </div>
+          <div class="cheatsheet-col">
+            <h3>Navigation</h3>
+            <dl>
+              <dt><kbd>h j k l</kbd></dt><dd>Left / Down / Up / Right</dd>
+              <dt><kbd>w b e</kbd></dt><dd>Word forward / back / end</dd>
+              <dt><kbd>0 $</kbd></dt><dd>Line start / end</dd>
+              <dt><kbd>gg G</kbd></dt><dd>File start / end</dd>
+              <dt><kbd>{ }</kbd></dt><dd>Paragraph up / down</dd>
+              <dt><kbd>%</kbd></dt><dd>Matching bracket</dd>
+              <dt><kbd>f<span class="key-arg">c</span></kbd></dt><dd>Find char forward</dd>
+            </dl>
+            <h3>Search</h3>
+            <dl>
+              <dt><kbd>/pattern</kbd></dt><dd>Search forward</dd>
+              <dt><kbd>?pattern</kbd></dt><dd>Search backward</dd>
+              <dt><kbd>n N</kbd></dt><dd>Next / prev match</dd>
+              <dt><kbd>*</kbd></dt><dd>Search word under cursor</dd>
+            </dl>
+          </div>
+          <div class="cheatsheet-col">
+            <h3>Editing</h3>
+            <dl>
+              <dt><kbd>dd</kbd></dt><dd>Delete line</dd>
+              <dt><kbd>yy</kbd></dt><dd>Yank (copy) line</dd>
+              <dt><kbd>p P</kbd></dt><dd>Paste after / before</dd>
+              <dt><kbd>ciw</kbd></dt><dd>Change inner word</dd>
+              <dt><kbd>di"</kbd></dt><dd>Delete inside quotes</dd>
+              <dt><kbd>o O</kbd></dt><dd>New line below / above</dd>
+              <dt><kbd>u</kbd></dt><dd>Undo</dd>
+              <dt><kbd>Ctrl+r</kbd></dt><dd>Redo</dd>
+              <dt><kbd>.</kbd></dt><dd>Repeat last change</dd>
+              <dt><kbd>&gt;&gt; &lt;&lt;</kbd></dt><dd>Indent / dedent line</dd>
+            </dl>
+            <h3>Registers</h3>
+            <dl>
+              <dt><kbd>"ay</kbd></dt><dd>Yank into register a</dd>
+              <dt><kbd>"ap</kbd></dt><dd>Paste from register a</dd>
+            </dl>
+          </div>
+        </div>
+        <div class="cheatsheet-footer">
+          <span>Press <kbd>Esc</kbd> or <kbd>:help</kbd> to close</span>
+        </div>
+      </div>
+    </div>
   </div>
   <script type="module" src="/src/main.js"></script>
 </body>

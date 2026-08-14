@@ -39,6 +39,20 @@ const cursorPosEl = document.getElementById('cursor-pos');
 const channelSelect = document.getElementById('channel-select');
 const modeSelect = document.getElementById('mode-select');
 const editionSelect = document.getElementById('edition-select');
+const helpBtn = document.getElementById('help-btn');
+const cheatsheetOverlay = document.getElementById('cheatsheet-overlay');
+const cheatsheetBackdrop = document.getElementById('cheatsheet-backdrop');
+const cheatsheetClose = document.getElementById('cheatsheet-close');
+
+// ---- Cheatsheet toggle ----
+function toggleCheatsheet() {
+  cheatsheetOverlay.classList.toggle('cheatsheet-hidden');
+}
+
+function closeCheatsheet() {
+  cheatsheetOverlay.classList.add('cheatsheet-hidden');
+  view?.focus();
+}
 
 // ---- Running state ----
 let isRunning = false;
@@ -224,6 +238,9 @@ try {
   Vim.defineEx('run', 'run', () => {
     runCode();
   });
+  Vim.defineEx('help', 'help', () => {
+    toggleCheatsheet();
+  });
 } catch (e) {
   console.warn('Could not define Vim ex commands:', e);
 }
@@ -237,6 +254,18 @@ clearBtn.addEventListener('click', () => {
 
 toggleOutputBtn.addEventListener('click', () => {
   outputSection.classList.toggle('collapsed');
+});
+
+helpBtn.addEventListener('click', toggleCheatsheet);
+cheatsheetClose.addEventListener('click', closeCheatsheet);
+cheatsheetBackdrop.addEventListener('click', closeCheatsheet);
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !cheatsheetOverlay.classList.contains('cheatsheet-hidden')) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeCheatsheet();
+  }
 });
 
 // ---- Vim mode polling (fallback for mode changes) ----

@@ -46,3 +46,4 @@ MIT (what would you even copy :tear)
 - shareable link
 - buffers
 - add the existing commands cheatsheet
+- console resize
